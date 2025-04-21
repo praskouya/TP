@@ -80,7 +80,12 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
         Started = numberOfBalls;
       }
 
-      public override IDisposable Subscribe(IObserver<ModelIBall> observer)
+            public override void Stop()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override IDisposable Subscribe(IObserver<ModelIBall> observer)
       {
         Subscribed++;
         return new NullDisposable();
@@ -132,7 +137,11 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
         }
       }
 
-      public override void Dispose()
+            public override void Stop()
+            {
+                throw new NotImplementedException();
+            }
+            public override void Dispose()
       {
         Disposed = true;
       }

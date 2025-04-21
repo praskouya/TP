@@ -39,7 +39,15 @@ namespace TP.ConcurrentProgramming.Presentation.Model
       Disposed = true;
     }
 
-    public override IDisposable Subscribe(IObserver<IBall> observer)
+    public override void Stop()
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(nameof(ModelImplementation));
+            layerBellow.Stop();
+        }
+
+
+        public override IDisposable Subscribe(IObserver<IBall> observer)
     {
       return eventObservable.Subscribe(x => observer.OnNext(x.EventArgs.Ball), ex => observer.OnError(ex), () => observer.OnCompleted());
     }
@@ -66,7 +74,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model
     private void StartHandler(BusinessLogic.IPosition position, BusinessLogic.IBall ball)
     {
       ModelBall newBall = new ModelBall(position.x, position.y, ball) { Diameter = 20.0 };
-      BallChanged.Invoke(this, new BallChaneEventArgs() { Ball = newBall });
+            BallChanged?.Invoke(this, new BallChaneEventArgs() { Ball = newBall });
     }
 
     #endregion private

@@ -26,7 +26,9 @@ namespace TP.ConcurrentProgramming.Data
 
     public event EventHandler<IVector>? NewPositionNotification;
 
-    public IVector Velocity { get; set; }
+
+
+        public IVector Velocity { get; set; }
 
     #endregion IBall
 
@@ -45,6 +47,8 @@ namespace TP.ConcurrentProgramming.Data
       RaiseNewPositionChangeNotification();
     }
 
-    #endregion private
-  }
+        #endregion private
+
+        
+    }
 }

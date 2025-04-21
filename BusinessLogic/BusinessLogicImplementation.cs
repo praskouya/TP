@@ -46,11 +46,18 @@ namespace TP.ConcurrentProgramming.BusinessLogic
       layerBellow.Start(numberOfBalls, (startingPosition, databall) => upperLayerHandler(new Position(startingPosition.x, startingPosition.x), new Ball(databall)));
     }
 
-    #endregion BusinessLogicAbstractAPI
+        public override void Stop()
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(nameof(BusinessLogicImplementation));
+            layerBellow.Stop(); // Delegate the stop logic to the data layer
+        }
 
-    #region private
+        #endregion BusinessLogicAbstractAPI
 
-    private bool Disposed = false;
+        #region private
+
+        private bool Disposed = false;
 
     private readonly UnderneathLayerAPI layerBellow;
 

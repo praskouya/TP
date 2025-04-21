@@ -73,6 +73,11 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
         Assert.IsNotNull(upperLayerHandler);
       }
 
+            public override void Stop()
+            {
+                Disposed = true;
+            }
+
       #endregion BusinessLogicAbstractAPI
     }
 

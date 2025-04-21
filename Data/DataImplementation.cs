@@ -9,7 +9,9 @@
 //_____________________________________________________________________________________________________________________________________
 
 using System;
+using System.Windows;
 using System.Diagnostics;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TP.ConcurrentProgramming.Data
 {
@@ -42,11 +44,23 @@ namespace TP.ConcurrentProgramming.Data
       }
     }
 
-    #endregion DataAbstractAPI
+        public override void Stop()
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(nameof(DataImplementation));
+            MoveTimer.Dispose(); // Stop the timer
+            BallsList.Clear();   // Clear the list of balls
 
-    #region IDisposable
+           // Application.Current.Shutdown();
+           Environment.Exit(0); // Close the application
+        }
 
-    protected virtual void Dispose(bool disposing)
+
+        #endregion DataAbstractAPI
+
+        #region IDisposable
+
+        protected virtual void Dispose(bool disposing)
     {
       if (!Disposed)
       {
