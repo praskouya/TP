@@ -50,11 +50,11 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
             {
                 _initialStartIgnored = true;
                 return; // ignoruj pierwsze wywołanie
-            }
+            } 
 
             if (_started) return;
 
-            Debug.WriteLine($"[ViewModel] Number of Balls: {numberOfBalls}");
+            //Debug.WriteLine($"[ViewModel] Number of Balls: {numberOfBalls}");
             ModelLayer.Start(numberOfBalls);
             _started = true;
         }

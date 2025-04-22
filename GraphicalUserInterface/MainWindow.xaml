@@ -16,10 +16,8 @@
             <Button Content="Start" Command="{Binding StartCommand}" Width="80" Margin="5"/>
             <Button Content="Stop" Command="{Binding StopCommand}" Width="80" Margin="5"/>
         </StackPanel>
-
-        <!-- Pole z kulkami -->
         <Border BorderThickness="4" BorderBrush="Green" Height="420" Width="400">
-            <ItemsControl ItemsSource="{Binding Balls}" Margin="6,-50,-6,6">
+            <ItemsControl ItemsSource="{Binding Balls}" Margin="-4,-4,-4,-4" Width="400" Height="420" d:IsHidden="True">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <Canvas />
@@ -31,12 +29,14 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
                 <ItemsControl.ItemContainerStyle>
-                    <Style TargetType="ContentPresenter">
+                    <Style TargetType="{x:Type ContentPresenter}">
                         <Setter Property="Canvas.Top" Value="{Binding Top}" />
                         <Setter Property="Canvas.Left" Value="{Binding Left}" />
                     </Style>
                 </ItemsControl.ItemContainerStyle>
             </ItemsControl>
         </Border>
+
+        <!-- Pole z kulkami -->
     </StackPanel>
 </Window>
