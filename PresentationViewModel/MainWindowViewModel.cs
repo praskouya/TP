@@ -69,6 +69,8 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
         // Kolekcja kulek
         public ObservableCollection<ModelIBall> Balls { get; } = new ObservableCollection<ModelIBall>();
 
+        public int CurrentBallCount => Balls.Count;
+
         #region IDisposable
 
         protected virtual void Dispose(bool disposing)

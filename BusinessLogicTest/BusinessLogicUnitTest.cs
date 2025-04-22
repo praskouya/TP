@@ -71,24 +71,37 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
       {
         throw new NotImplementedException();
       }
-    }
 
-    private class DataLayerDisposeFixcure : Data.DataAbstractAPI
-    {
-      internal bool Disposed = false;
+            public override void Stop()
+            {
+                throw new NotImplementedException();
+            }
 
-      public override void Dispose()
-      {
-        Disposed = true;
-      }
+        }
 
-      public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
-      {
-        throw new NotImplementedException();
-      }
-    }
+        private class DataLayerDisposeFixcure : Data.DataAbstractAPI
+        {
+            internal bool Disposed = false;
 
-    private class DataLayerStartFixcure : Data.DataAbstractAPI
+            public override void Dispose()
+            {
+                Disposed = true;
+            }
+
+            public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Stop()
+            {
+                // Provide an implementation for the Stop method
+                // Since this is a test fixture, it can be left empty or throw a NotImplementedException
+                throw new NotImplementedException();
+            }
+        }
+      
+        private class DataLayerStartFixcure : Data.DataAbstractAPI
     {
       internal bool StartCalled = false;
       internal int NumberOfBallseCreated = -1;
@@ -103,7 +116,13 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
         upperLayerHandler(new DataVectorFixture(), new DataBallFixture());
       }
 
-      private record DataVectorFixture : Data.IVector
+            public override void Stop()
+            {
+                throw new NotImplementedException();
+            }
+
+
+            private record DataVectorFixture : Data.IVector
       {
         public double x { get; init; }
         public double y { get; init; }

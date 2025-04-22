@@ -21,36 +21,41 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
   public class MainWindowViewModelUnitTest
   {
     [TestMethod]
-    public void ConstructorTest()
-    {
-      ModelNullFixture nullModelFixture = new();
-      Assert.AreEqual<int>(0, nullModelFixture.Disposed);
-      Assert.AreEqual<int>(0, nullModelFixture.Started);
-      Assert.AreEqual<int>(0, nullModelFixture.Subscribed);
-      using (MainWindowViewModel viewModel = new(nullModelFixture))
-      {
-        Random random = new Random();
-        int numberOfBalls = random.Next(1, 10);
-        viewModel.Start(numberOfBalls);
-        Assert.IsNotNull(viewModel.Balls);
-        Assert.AreEqual<int>(0, nullModelFixture.Disposed);
-        Assert.AreEqual<int>(numberOfBalls, nullModelFixture.Started);
-        Assert.AreEqual<int>(1, nullModelFixture.Subscribed);
-      }
-      Assert.AreEqual<int>(1, nullModelFixture.Disposed);
-    }
+        public void ConstructorTest()
+        {
+            ModelNullFixture nullModelFixture = new();
+            Assert.AreEqual<int>(0, nullModelFixture.Disposed);
+            Assert.AreEqual<int>(0, nullModelFixture.Started);
+            Assert.AreEqual<int>(0, nullModelFixture.Subscribed);
+
+            using (MainWindowViewModel viewModel = new(nullModelFixture))
+            {
+               
+                int numberOfBallsFromTextbox = 0; 
+                numberOfBallsFromTextbox = viewModel.CurrentBallCount;
+
+                viewModel.Start(numberOfBallsFromTextbox);
+                Assert.IsNotNull(viewModel.Balls);
+                Assert.AreEqual<int>(0, nullModelFixture.Disposed);
+                Assert.AreEqual<int>(numberOfBallsFromTextbox, nullModelFixture.Started);
+                Assert.AreEqual<int>(1, nullModelFixture.Subscribed);
+            }
+
+            Assert.AreEqual<int>(1, nullModelFixture.Disposed);
+        }
 
     [TestMethod]
     public void BehaviorTestMethod()
     {
+    
+
       ModelSimulatorFixture modelSimulator = new();
       MainWindowViewModel viewModel = new(modelSimulator);
       Assert.IsNotNull(viewModel.Balls);
       Assert.AreEqual<int>(0, viewModel.Balls.Count);
-      Random random = new Random();
-      int numberOfBalls = random.Next(1, 10);
-      viewModel.Start(numberOfBalls);
-      Assert.AreEqual<int>(numberOfBalls, viewModel.Balls.Count);
+    
+      viewModel.Start(viewModel.CurrentBallCount);
+      Assert.AreEqual<int>(viewModel.CurrentBallCount, viewModel.Balls.Count);
       viewModel.Dispose();
       Assert.IsTrue(modelSimulator.Disposed);
       Assert.AreEqual<int>(0, viewModel.Balls.Count);
