@@ -1,4 +1,4 @@
-﻿//____________________________________________________________________________________________________________________________________
+﻿﻿//____________________________________________________________________________________________________________________________________
 //
 //  Copyright (C) 2024, Mariusz Postol LODZ POLAND.
 //
@@ -27,6 +27,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model
     {
       layerBellow = underneathLayer == null ? UnderneathLayerAPI.GetBusinessLogicLayer() : underneathLayer;
       eventObservable = Observable.FromEventPattern<BallChaneEventArgs>(this, "BallChanged");
+      windowChangedObservable = Observable.FromEventPattern<WindowChangedEventArgs>(this, "WindowChanged");
     }
 
     #region ModelAbstractApi
@@ -39,49 +40,63 @@ namespace TP.ConcurrentProgramming.Presentation.Model
       Disposed = true;
     }
 
-    public override void Stop()
-        {
-            if (Disposed)
-                throw new ObjectDisposedException(nameof(ModelImplementation));
-            layerBellow.Stop();
-        }
-
-
-        public override IDisposable Subscribe(IObserver<IBall> observer)
+    
+    public override IDisposable Subscribe(IObserver<IBall> observer)
     {
       return eventObservable.Subscribe(x => observer.OnNext(x.EventArgs.Ball), ex => observer.OnError(ex), () => observer.OnCompleted());
     }
 
-    public override void Start(int numberOfBalls)
+    // public override IDisposable SubscribeToWindowChanges(IObserver<WindowChangedEventArgs> observer)
+    // {
+    //     return windowChangedObservable.Subscribe(x => observer.OnNext(x.EventArgs), ex => observer.OnError(ex), () => observer.OnCompleted());
+    // }
+
+        public override void Start(int numberOfBalls)
     {
       layerBellow.Start(numberOfBalls, StartHandler);
     }
 
-    #endregion ModelAbstractApi
+    public override void UpdateBallsCount(int numberofBalls)
+        {
+            layerBellow.UpdateBallsCount(numberofBalls, StartHandler);
+        }
 
-    #region API
+        #endregion ModelAbstractApi
 
-    public event EventHandler<BallChaneEventArgs> BallChanged;
+        #region API
 
-    #endregion API
+        public event EventHandler<BallChaneEventArgs> BallChanged;
+        public event EventHandler<WindowChangedEventArgs> WindowChanged;
 
-    #region private
+        #endregion API
 
-    private bool Disposed = false;
+        #region private
+
+        private bool Disposed = false;
     private readonly IObservable<EventPattern<BallChaneEventArgs>> eventObservable = null;
+    private readonly IObservable<EventPattern<WindowChangedEventArgs>> windowChangedObservable = null;
     private readonly UnderneathLayerAPI layerBellow = null;
 
     private void StartHandler(BusinessLogic.IPosition position, BusinessLogic.IBall ball)
     {
       ModelBall newBall = new ModelBall(position.x, position.y, ball) { Diameter = 20.0 };
-            BallChanged?.Invoke(this, new BallChaneEventArgs() { Ball = newBall });
+      BallChanged?.Invoke(this, new BallChaneEventArgs() { Ball = newBall });
     }
 
-    #endregion private
+    private void OnWindowChangedHandler(double squareWidth, double squareHeight)
+    {
+        WindowChanged?.Invoke(this, new WindowChangedEventArgs
+        {
+            SquareWidth = squareWidth,
+            SquareHeight = squareHeight
+        });
+    }
 
-    #region TestingInfrastructure
+        #endregion private
 
-    [Conditional("DEBUG")]
+        #region TestingInfrastructure
+
+        [Conditional("DEBUG")]
     internal void CheckObjectDisposed(Action<bool> returnInstanceDisposed)
     {
       returnInstanceDisposed(Disposed);
@@ -106,4 +121,10 @@ namespace TP.ConcurrentProgramming.Presentation.Model
   {
     public IBall Ball { get; init; }
   }
+
+    public class WindowChangedEventArgs : EventArgs
+    {
+        public double SquareWidth { get; init; }
+        public double SquareHeight { get; init; }
+    }
 }

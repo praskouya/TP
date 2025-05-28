@@ -9,6 +9,7 @@
 
 using System;
 using System.ComponentModel;
+using TP.ConcurrentProgramming.Presentation.Model;
 
 namespace TP.ConcurrentProgramming.Presentation.Model
 {
@@ -18,6 +19,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model
     double Left { get; }
     double Diameter { get; }
   }
+  
 
   public abstract class ModelAbstractApi : IObservable<IBall>, IDisposable
   {
@@ -26,10 +28,9 @@ namespace TP.ConcurrentProgramming.Presentation.Model
       return modelInstance.Value;
     }
 
+    
     public abstract void Start(int numberOfBalls);
-
-    public abstract void Stop();
-
+    public abstract void UpdateBallsCount(int numberofBalls);
 
         #region IObservable
 

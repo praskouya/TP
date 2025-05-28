@@ -1,4 +1,4 @@
-﻿//____________________________________________________________________________________________________________________________________
+﻿﻿//____________________________________________________________________________________________________________________________________
 //
 //  Copyright (C) 2024, Mariusz Postol LODZ POLAND.
 //
@@ -8,6 +8,7 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Reactive;
 using TP.ConcurrentProgramming.Data;
 
 namespace TP.ConcurrentProgramming.BusinessLogic.Test
@@ -64,63 +65,112 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
 
     private class DataLayerConstructorFixcure : Data.DataAbstractAPI
     {
+      public override void Stop()
+      {
+      }
       public override void Dispose()
       { }
+            public bool Disposed = false;
+            public bool SetPositionValidatorCalled = false;
+            public Func<IVector, bool> SetPositionValidatorFunc = null;
+            public override void SetPositionValidator(Func<IVector, bool> validator)
+            {
+                SetPositionValidatorCalled = true;
+                SetPositionValidatorFunc = validator;
+            }
 
-      public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
+            public override IDisposable Subscribe(IObserver<BallChaneEventArgs> observer)
+            {
+                return new AnonymousObserver<BallChaneEventArgs>(x => { });
+            }
+            public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
+      {
+       
+      }
+
+            public override void UpdateBallsCount(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
+            {
+                throw new NotImplementedException();
+            }
+
+        }
+
+    private class DataLayerDisposeFixcure : Data.DataAbstractAPI
+    {
+      internal bool Disposed = false;
+
+      public override void Stop()
+      {
+      }
+      public override void Dispose()
+      {
+        Disposed = true;
+      }
+
+            public override IDisposable Subscribe(IObserver<BallChaneEventArgs> observer)
+            {
+                return new AnonymousObserver<BallChaneEventArgs>(x => { });
+            }
+            public bool SetPositionValidatorCalled = false;
+            public Func<IVector, bool> SetPositionValidatorFunc = null;
+            public override void SetPositionValidator(Func<IVector, bool> validator)
+            {
+                SetPositionValidatorCalled = true;
+                SetPositionValidatorFunc = validator;
+            }
+            public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
       {
         throw new NotImplementedException();
       }
 
-            public override void Stop()
+            public override void UpdateBallsCount(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
             {
                 throw new NotImplementedException();
             }
-
+        
         }
 
-        private class DataLayerDisposeFixcure : Data.DataAbstractAPI
-        {
-            internal bool Disposed = false;
+    private class DataLayerStartFixcure : Data.DataAbstractAPI
+    {
+      public override void Stop()
+      {
+      }
+      internal bool StartCalled = false;
+      internal bool UpdateBallsCountCalled = false;
+    internal bool ChangeWindowSizeCalled = false;
+    internal int NumberOfBallseCreated = -1;
+            internal double WindowWidthCreated = -1;
+            internal double WindowHeightCreated = -1;
+            internal double SquareWidthCreated = -1;
+            internal double SquareHegihtCreated = -1;
 
             public override void Dispose()
+      { }
+            public bool Disposed = false;
+            public override IDisposable Subscribe(IObserver<BallChaneEventArgs> observer)
             {
-                Disposed = true;
+                return new AnonymousObserver<BallChaneEventArgs>(x => { });
+            }
+            public override void SetPositionValidator(Func<IVector, bool> validator)
+            {
+                
             }
 
             public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Stop()
-            {
-                // Provide an implementation for the Stop method
-                // Since this is a test fixture, it can be left empty or throw a NotImplementedException
-                throw new NotImplementedException();
-            }
-        }
-      
-        private class DataLayerStartFixcure : Data.DataAbstractAPI
-    {
-      internal bool StartCalled = false;
-      internal int NumberOfBallseCreated = -1;
-
-      public override void Dispose()
-      { }
-
-      public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
       {
         StartCalled = true;
+                
         NumberOfBallseCreated = numberOfBalls;
         upperLayerHandler(new DataVectorFixture(), new DataBallFixture());
       }
 
-            public override void Stop()
+            public override void UpdateBallsCount(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
             {
-                throw new NotImplementedException();
+                UpdateBallsCountCalled = true;
+                NumberOfBallseCreated = numberOfBalls;
+                upperLayerHandler(new DataVectorFixture(), new DataBallFixture());
             }
-
+        
 
             private record DataVectorFixture : Data.IVector
       {
@@ -131,8 +181,10 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
       private class DataBallFixture : Data.IBall
       {
         public IVector Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+                public IVector PositionValue => new DataVectorFixture();
+                public void SetVelocity(double x, double y) { }
 
-        public event EventHandler<IVector>? NewPositionNotification = null;
+                public event EventHandler<IVector>? NewPositionNotification = null;
       }
     }
 

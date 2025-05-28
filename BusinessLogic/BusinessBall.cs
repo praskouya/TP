@@ -8,28 +8,47 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Numerics;
+using TP.ConcurrentProgramming.Data;
+
 namespace TP.ConcurrentProgramming.BusinessLogic
 {
-  internal class Ball : IBall
-  {
-    public Ball(Data.IBall ball)
+    internal class Ball : IBall
     {
-      ball.NewPositionNotification += RaisePositionChangeEvent;
+        public Ball(Data.IBall ball, IPosition position)
+        {
+            _dataBall = ball;
+            Pos = position;
+            ball.NewPositionNotification += RaisePositionChangeEvent;
+        }
+
+        #region IBall
+
+        public event EventHandler<IPosition>? NewPositionNotification;
+
+        public IPosition PositionValue => Pos;
+
+        public IVector Velocity => _dataBall.Velocity;
+
+        public void setVelocity(double x, double y)
+        {
+            _dataBall.SetVelocity(x, y);
+        }
+
+        #endregion IBall
+
+        #region private
+
+        private readonly Data.IBall _dataBall;
+
+        private IPosition Pos;
+
+        private void RaisePositionChangeEvent(object? sender, Data.IVector e)
+        {
+            Pos = new Position(e.x, e.y);
+            NewPositionNotification?.Invoke(this, new Position(e.x, e.y));
+        }
+
+        #endregion private
     }
-
-    #region IBall
-
-    public event EventHandler<IPosition>? NewPositionNotification;
-
-    #endregion IBall
-
-    #region private
-
-    private void RaisePositionChangeEvent(object? sender, Data.IVector e)
-    {
-      NewPositionNotification?.Invoke(this, new Position(e.x, e.y));
-    }
-
-    #endregion private
-  }
 }

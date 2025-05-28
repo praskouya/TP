@@ -1,4 +1,4 @@
-﻿//____________________________________________________________________________________________________________________________________
+﻿﻿//____________________________________________________________________________________________________________________________________
 //
 //  Copyright (C) 2024, Mariusz Postol LODZ POLAND.
 //
@@ -53,18 +53,26 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
 
     private class UnderneathLayerFixture : BusinessLogicAbstractAPI
     {
-      #region testing instrumentation
+            #region testing instrumentation
 
-      internal bool Disposed = false;
+            internal bool Disposed = false;
       internal int NumberOfBalls = 0;
+            internal double WindowHeightCreated = 0;
+            internal double WindowWidthCreated = 0;
+            internal double SquareHeightCreated = 0;
+            internal double SquareWidthCreated = 0;
 
-      #endregion testing instrumentation
+            #endregion testing instrumentation
 
-      #region BusinessLogicAbstractAPI
+            #region BusinessLogicAbstractAPI
 
-      public override void Dispose()
+            public override void Dispose()
       {
         Disposed = true;
+      }
+
+      public override void Stop()
+      {
       }
 
       public override void Start(int numberOfBalls, Action<IPosition, BusinessLogic.IBall> upperLayerHandler)
@@ -73,13 +81,16 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
         Assert.IsNotNull(upperLayerHandler);
       }
 
-            public override void Stop()
+            public override void UpdateBallsCount(int numberofBalls, Action<IPosition, BusinessLogic.IBall> upperLayerHandler)
             {
-                Disposed = true;
+                NumberOfBalls = numberofBalls;
+                Assert.IsNotNull(upperLayerHandler);
             }
 
-      #endregion BusinessLogicAbstractAPI
-    }
+      
+
+            #endregion BusinessLogicAbstractAPI
+        }
 
     #endregion testing instrumentation
   }

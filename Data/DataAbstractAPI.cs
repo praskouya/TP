@@ -1,4 +1,4 @@
-﻿//____________________________________________________________________________________________________________________________________
+﻿﻿//____________________________________________________________________________________________________________________________________
 //
 //  Copyright (C) 2024, Mariusz Postol LODZ POLAND.
 //
@@ -24,15 +24,23 @@ namespace TP.ConcurrentProgramming.Data
     #region public API
 
     public abstract void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler);
-    public abstract void Stop();
+    public abstract void UpdateBallsCount(int numberOfBalls, Action<IVector, IBall> upperLayerHandler);
 
+        public abstract void SetPositionValidator(Func<IVector, bool> validator);
+        public abstract void Stop();
         #endregion public API
+
+        #region IObservable
+
+        public abstract IDisposable Subscribe(IObserver<BallChaneEventArgs> observer);
+
+        #endregion IObservable
 
         #region IDisposable
 
         public abstract void Dispose();
 
-    #endregion IDisposable
+#endregion IDisposable
 
     #region private
 
@@ -58,6 +66,7 @@ namespace TP.ConcurrentProgramming.Data
   {
     event EventHandler<IVector> NewPositionNotification;
 
-    IVector Velocity { get; set; }
+        void SetVelocity(double x, double y); 
+    IVector Velocity { get;}
   }
 }

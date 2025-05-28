@@ -1,4 +1,4 @@
-﻿//____________________________________________________________________________________________________________________________________
+﻿﻿//____________________________________________________________________________________________________________________________________
 //
 //  Copyright (C) 2024, Mariusz Postol LODZ POLAND.
 //
@@ -9,9 +9,10 @@
 //_____________________________________________________________________________________________________________________________________
 
 using System;
-using System.Windows;
 using System.Diagnostics;
-using static System.Net.Mime.MediaTypeNames;
+using System.Numerics;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace TP.ConcurrentProgramming.Data
 {
@@ -21,14 +22,19 @@ namespace TP.ConcurrentProgramming.Data
 
     public DataImplementation()
     {
-      MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+            eventObservable = Observable.FromEventPattern<BallChaneEventArgs>(this, "BallChanged");
     }
 
-    #endregion ctor
+        #endregion ctor
 
-    #region DataAbstractAPI
+        #region DataAbstractAPI
 
-    public override void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler)
+        public override IDisposable Subscribe(IObserver<BallChaneEventArgs> observer)
+        {
+            return eventObservable.Subscribe(x => observer.OnNext(x.EventArgs), ex => observer.OnError(ex), () => observer.OnCompleted());
+        }
+        
+        public override void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler)
     {
       if (Disposed)
         throw new ObjectDisposedException(nameof(DataImplementation));
@@ -37,7 +43,7 @@ namespace TP.ConcurrentProgramming.Data
       Random random = new Random();
       for (int i = 0; i < numberOfBalls; i++)
       {
-                Ball newBall;
+                Ball? newBall;
                 Vector startingPosition;
                 Vector startingVelocity;
                 Vector predictDelta = new(0, 0);
@@ -45,24 +51,68 @@ namespace TP.ConcurrentProgramming.Data
                 {
                     startingPosition = new(random.Next(100, 400 - 100), random.Next(100, 400 - 100));
                     startingVelocity = new((random.NextDouble() - 0.5) * 6, (random.NextDouble() - 0.5) * 6);
-                    newBall = new(startingPosition, startingVelocity); 
-                } while (CheckCollision(startingPosition, newBall) != -1);
+                    newBall = new(startingPosition, startingVelocity, checkColisionHandler);
+                } while (isValidPosition != null && !isValidPosition(startingPosition));
 
-        upperLayerHandler(startingPosition, newBall);
+                upperLayerHandler(startingPosition, newBall);
         BallsList.Add(newBall);
       }
     }
+        
+    public override void Stop()
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(nameof(DataImplementation));
+        BallsList.Clear();   // Clear the list of balls
 
-        public override void Stop()
+        Environment.Exit(0); // Close the application
+    }
+
+    public override void UpdateBallsCount(int numberOfBalls, Action<IVector, IBall> upperLayerHandler)
         {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(DataImplementation));
-            MoveTimer.Dispose(); // Stop the timer
-            BallsList.Clear();   // Clear the list of balls
-
-           Environment.Exit(0); // Close the application
+            int sizeOfBallList = BallsList.Count;
+            if (numberOfBalls < sizeOfBallList)
+            {
+                for(int i = 0; i < sizeOfBallList - numberOfBalls; i++)
+                {
+                    BallsList.RemoveAt(BallsList.Count-1);
+                }
+            }
+            else
+            {
+                Random random = new Random();
+                for (int i = 0; i < numberOfBalls - sizeOfBallList; i++)
+                {
+                    Ball? newBall;
+                    Vector startingPosition;
+                    Vector startingVelocity;
+                    Vector predictDelta = new(0, 0);
+                    do
+                    {
+                        startingPosition = new(random.Next(100, 400 - 100), random.Next(100, 400 - 100));
+                        startingVelocity = new((random.NextDouble() - 0.5) * 6, (random.NextDouble() - 0.5) * 6);
+                        newBall = new(startingPosition, startingVelocity, checkColisionHandler);
+                    } while (isValidPosition != null && !isValidPosition(startingPosition));
+                    BallsList.Add(newBall);
+                }
+            }
+            for (int i = 0; i < BallsList.Count; i++)
+            {
+                upperLayerHandler(BallsList[i].PositionValue, BallsList[i]);
+            }
         }
 
+    
+
+        public event EventHandler<BallChaneEventArgs>? BallChanged;
+
+        
+        public override void SetPositionValidator(Func<IVector, bool> validator)
+        {
+            isValidPosition = validator;
+        }
 
         #endregion DataAbstractAPI
 
@@ -74,7 +124,6 @@ namespace TP.ConcurrentProgramming.Data
       {
         if (disposing)
         {
-          MoveTimer.Dispose();
           BallsList.Clear();
         }
         Disposed = true;
@@ -93,115 +142,26 @@ namespace TP.ConcurrentProgramming.Data
         #endregion IDisposable
 
         #region private
-        
-            //private bool disposedValue;
-            private bool Disposed = false;
 
-            private readonly Timer MoveTimer;
-            private Random RandomGenerator = new();
-            private List<Ball> BallsList = [];
+        //private bool disposedValue;
+        private readonly IObservable<EventPattern<BallChaneEventArgs>> eventObservable;
+        private bool Disposed = false;
 
-            private const int margin = 4;
-            private const double ballDiameter = 20.0;
-            private const double width = 400.0;
-            private const double height = 420.0;
+    private Random RandomGenerator = new();
+    private List<Ball> BallsList = [];
+        private Func<IVector, bool>? isValidPosition;
+        private double width = 400;
+            private double height = 420;
+        private void checkColisionHandler(IBall Ball, IVector Pos)
+        {
+            BallChanged?.Invoke(this, new BallChaneEventArgs { Ball = Ball, Pos = Pos });
+        }
 
-                private int CheckCollision(Vector targetPos, Ball current)
-                {
-                    // Sprawdzenie kolizji ze ścianami po osi X
-                    if (targetPos.x <= 0 - margin / 2 || targetPos.x + ballDiameter >= width - 2 * margin)
-                        return -2;
+    #endregion private
 
-                    // Sprawdzenie kolizji ze ścianami po osi Y
-                    if (targetPos.y <= 0 - margin / 2 || targetPos.y + ballDiameter >= height - 2 * margin)
-                        return -3;
+    #region TestingInfrastructure
 
-                    // Sprawdzenie kolizji z innymi kulami
-                    foreach (var other in BallsList)
-                    {
-                        if (other == current)
-                            continue;
-
-                        double dx = other.PositionValue.x - targetPos.x;
-                        double dy = other.PositionValue.y - targetPos.y;
-                        double dist = Math.Sqrt(dx * dx + dy * dy);
-
-                        if (dist <= ballDiameter)
-                            return BallsList.IndexOf(other);
-                    }
-
-                    return -1; // Brak kolizji
-                }
-
-
-                private void Move(object? state)
-                {
-                    const int maxAttempts = 50;
-
-                    foreach (Ball ball in BallsList)
-                    {
-                        int attempts = 0;
-                        while (true)
-                        {
-                            Vector velocity = (Vector)ball.Velocity;
-                            Vector proposedPosition = new(ball.PositionValue.x + velocity.x, ball.PositionValue.y + velocity.y);
-
-                            int collisionCode = CheckCollision(proposedPosition, ball);
-
-                            switch (collisionCode)
-                            {
-                                case -1:
-                                    ball.Move(velocity);
-                                    goto NextBall;
-
-                                case -2:
-                                    ball.Velocity = new Vector(-velocity.x, velocity.y);
-                                    break;
-
-                                case -3:
-                                    ball.Velocity = new Vector(velocity.x, -velocity.y);
-                                    break;
-
-                                default:
-                                    Ball other = BallsList[collisionCode];
-
-                                    Vector pos1 = (Vector)ball.PositionValue;
-                                    Vector pos2 = (Vector)other.PositionValue;
-                                    Vector vel1 = (Vector)ball.Velocity;
-                                    Vector vel2 = (Vector)other.Velocity;
-
-                                    double dx = pos1.x - pos2.x;
-                                    double dy = pos1.y - pos2.y;
-                                    double dist = Math.Sqrt(dx * dx + dy * dy);
-                                    if (dist == 0) dist = 0.01;
-
-                                    double normX = dx / dist;
-                                    double normY = dy / dist;
-
-                                    double proj1 = vel1.x * normX + vel1.y * normY;
-                                    double proj2 = vel2.x * normX + vel2.y * normY;
-                                    double impulse = proj1 - proj2;
-
-                                    ball.Velocity = new Vector(vel1.x - impulse * normX, vel1.y - impulse * normY);
-                                    other.Velocity = new Vector(vel2.x + impulse * normX, vel2.y + impulse * normY);
-                                    break;
-                            }
-
-                            if (++attempts >= maxAttempts)
-                                break;
-                        }
-
-                    NextBall:
-                        continue;
-                    }
-                } 
-
-
-        #endregion private
-
-        #region TestingInfrastructure
-
-        [Conditional("DEBUG")]
+    [Conditional("DEBUG")]
     internal void CheckBallsList(Action<IEnumerable<IBall>> returnBallsList)
     {
       returnBallsList(BallsList);
@@ -221,4 +181,11 @@ namespace TP.ConcurrentProgramming.Data
 
     #endregion TestingInfrastructure
   }
+    public class BallChaneEventArgs : EventArgs
+    {
+        public IBall Ball { get; init; }
+
+        public IVector Pos {get; init;}
+    }
+
 }

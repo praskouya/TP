@@ -1,109 +1,203 @@
-﻿using System;
+﻿﻿//__________________________________________________________________________________________
+//
+//  Copyright 2024 Mariusz Postol LODZ POLAND.
+//
+//  To be in touch join the community by pressing the `Watch` button and to get started
+//  comment using the discussion panel at
+//  https://github.com/mpostol/TP/discussions/182
+//__________________________________________________________________________________________
+
+using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Windows.Input;
+using System.Reactive;
 using TP.ConcurrentProgramming.Presentation.Model;
 using TP.ConcurrentProgramming.Presentation.ViewModel.MVVMLight;
 using ModelIBall = TP.ConcurrentProgramming.Presentation.Model.IBall;
 
 namespace TP.ConcurrentProgramming.Presentation.ViewModel
 {
-    public class MainWindowViewModel : ViewModelBase, IDisposable
+  public class MainWindowViewModel : ViewModelBase, IDisposable
+  {
+    #region ctor
+
+    public MainWindowViewModel() : this(null)
+    { }
+
+    internal MainWindowViewModel(ModelAbstractApi modelLayerAPI)
     {
-        // Zmienna przechowująca liczbę kulek
-        private int _numberOfBalls = 0;
-
-        // Właściwość NumberOfBalls, która jest bindowana
-        public int NumberOfBalls
-        {
-            get => _numberOfBalls;
-            set
-            {
-                if (_numberOfBalls != value)
-                {
-                    _numberOfBalls = value;
-                    RaisePropertyChanged(nameof(NumberOfBalls)); // Powiadomienie o zmianie
-                }
-            }
+      ModelLayer = modelLayerAPI ?? ModelAbstractApi.CreateModel();
+      Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
+      
+      // WindowObserver = ModelLayer.SubscribeToWindowChanges(new 
+      //     AnonymousObserver<WindowChangedEventArgs>(e =>
+      //   {
+      //       SquareWidth = e.SquareWidth;
+      //       SquareHeight = e.SquareHeight;
+      //   }));
         }
 
-        public MainWindowViewModel() : this(null) { }
+    #endregion ctor
 
-        internal MainWindowViewModel(ModelAbstractApi modelLayerAPI)
-        {
-            ModelLayer = modelLayerAPI == null ? ModelAbstractApi.CreateModel() : modelLayerAPI;
-            Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
+    #region public API
+
+    public int CurrentBallCount => BallCount;
+    
+    public void Start(int numberOfBalls)
+    {
+      if (Disposed)
+        throw new ObjectDisposedException(nameof(MainWindowViewModel));
+      BallCount = numberOfBalls;
+      ModelLayer.Start(numberOfBalls);
         }
 
-        // Komenda Start, która uruchamia ModelLayer z liczbą kulek
-        public ICommand StartCommand => new RelayCommand(() => Start(NumberOfBalls));
-
-        // Komenda Stop
-        public ICommand StopCommand => new RelayCommand(() => Stop());
-
-        private bool _started = false;
-        bool _initialStartIgnored = false;
-
-        public void Start(int numberOfBalls)
-        {
-            if (!_initialStartIgnored)
-            {
-                _initialStartIgnored = true;
-                return; // ignoruj pierwsze wywołanie
-            } 
-
-            if (_started) return;
-
-            //Debug.WriteLine($"[ViewModel] Number of Balls: {numberOfBalls}");
-            ModelLayer.Start(numberOfBalls);
-            _started = true;
-        }
-
-        public void Stop()
+    public void UpdateBallsCount(int numberOfBalls)
         {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(MainWindowViewModel));
-            ModelLayer.Stop();
+            Balls.Clear();
+            ModelLayer.UpdateBallsCount(numberOfBalls);
         }
 
-        // Kolekcja kulek
         public ObservableCollection<ModelIBall> Balls { get; } = new ObservableCollection<ModelIBall>();
 
-        public int CurrentBallCount => Balls.Count;
+    #endregion public API
 
-        #region IDisposable
+    #region IDisposable
 
-        protected virtual void Dispose(bool disposing)
+    protected virtual void Dispose(bool disposing)
+    {
+      if (!Disposed)
+      {
+        if (disposing)
         {
-            if (!Disposed)
-            {
-                if (disposing)
-                {
-                    Balls.Clear();
-                    Observer.Dispose();
-                    ModelLayer.Dispose();
-                }
+          Balls.Clear();
+          Observer.Dispose();
+            WindowObserver.Dispose();
+            ModelLayer.Dispose();
+        }
 
-                Disposed = true;
+        // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+        // TODO: set large fields to null
+        Disposed = true;
+      }
+    }
+
+    public void Dispose()
+    {
+      if (Disposed)
+        throw new ObjectDisposedException(nameof(MainWindowViewModel));
+      Dispose(disposing: true);
+      GC.SuppressFinalize(this);
+    }
+
+    #endregion IDisposable
+
+    #region private
+
+    private IDisposable Observer = null;
+    private IDisposable WindowObserver = null;
+    private ModelAbstractApi ModelLayer;
+    private bool Disposed = false;
+
+        #endregion private
+        private double _windowWidth = 1152;
+        public double WindowWidth
+        {
+            get => _windowWidth;
+            set
+            {
+                _windowWidth = value;
+                RaisePropertyChanged(nameof(WindowWidth));
+                ChangeSize.Execute(null);
             }
         }
 
-        public void Dispose()
+        private double _windowHeight = 592;
+        public double WindowHeight
         {
-            if (Disposed)
-                throw new ObjectDisposedException(nameof(MainWindowViewModel));
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            get => _windowHeight;
+            set
+            {
+                _windowHeight = value;
+                RaisePropertyChanged(nameof(WindowHeight));
+                ChangeSize.Execute(null);
+            }
         }
 
-        #endregion IDisposable
+        private double _squareWidth = 400;
+        public double SquareWidth
+        {
+            get => _squareWidth;
+            set
+            {
+                _squareWidth = value;
+                RaisePropertyChanged(nameof(SquareWidth));
+            }
+        }
 
-        #region private
+        private double _squareHeight = 420;
+        public double SquareHeight
+        {
+            get => _squareHeight;
+            set
+            {
+                _squareHeight = value;
+                RaisePropertyChanged(nameof(SquareHeight));
+            }
+        }
 
-        private IDisposable Observer = null;
-        private ModelAbstractApi ModelLayer;
-        private bool Disposed = false;
+        private RelayCommand _changeSize;
+        public RelayCommand ChangeSize
+        {
+            get
+            {
+                return _changeSize ??= new RelayCommand(() =>
+                {
+                    //ChangeWindowSize(_windowWidth, _windowHeight, _squareWidth, _squareHeight);
+                });
+            }
+        }
 
-        #endregion private
+        private Boolean _firstValue = true;
+        private int _ballCount = 5;
+        public int BallCount
+        {
+            get => _ballCount;
+            set
+            {
+                _ballCount = value;
+                RaisePropertyChanged(nameof(BallCount));
+                if(!_firstValue)
+                    StartCommand.Execute(null);
+                else
+                    _firstValue = false;
+            }
+        }
+
+        private RelayCommand _startCommand;
+        public RelayCommand StartCommand
+        {
+            get
+            {
+                return _startCommand ??= new RelayCommand(() =>
+                {
+                    UpdateBallsCount(_ballCount);
+                });
+            }
+        }
+
+        private RelayCommand _stopCommand;
+        public RelayCommand StopCommand
+        {
+            get
+            {
+                return _stopCommand ??= new RelayCommand(() =>
+                {
+                    _ballCount = 0;
+                    RaisePropertyChanged(nameof(BallCount));
+                    UpdateBallsCount(_ballCount);
+                });
+            }
+        }
     }
 }

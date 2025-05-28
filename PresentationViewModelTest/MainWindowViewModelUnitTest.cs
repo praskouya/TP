@@ -75,6 +75,10 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
 
       #region ModelAbstractApi
 
+      public override void UpdateBallsCount(int numberOfBalls)
+      {
+        // Можно просто ничего не делать
+      }
       public override void Dispose()
       {
         Disposed++;
@@ -85,10 +89,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
         Started = numberOfBalls;
       }
 
-            public override void Stop()
-            {
-                throw new NotImplementedException();
-            }
+            
 
             public override IDisposable Subscribe(IObserver<ModelIBall> observer)
       {
@@ -118,7 +119,16 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
       #endregion Testing indicators
 
       #region ctor
-
+  
+      public override void UpdateBallsCount(int numberOfBalls)
+      {
+        for (int i = 0; i < numberOfBalls; i++)
+        {
+          ModelBall newBall = new ModelBall(0, 0);
+          BallChanged?.Invoke(this, new BallChaneEventArgs() { Ball = newBall });
+        }
+      }
+      
       public ModelSimulatorFixture()
       {
         eventObservable = Observable.FromEventPattern<BallChaneEventArgs>(this, "BallChanged");
@@ -142,10 +152,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
         }
       }
 
-            public override void Stop()
-            {
-                throw new NotImplementedException();
-            }
+            
             public override void Dispose()
       {
         Disposed = true;
