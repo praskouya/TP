@@ -66,28 +66,24 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
 
     protected virtual void Dispose(bool disposing)
     {
-      if (!Disposed)
-      {
-        if (disposing)
+        if (!Disposed)
         {
-          Balls.Clear();
-          Observer.Dispose();
-            WindowObserver.Dispose();
-            ModelLayer.Dispose();
-        }
+            if (disposing)
+            {
+                Balls.Clear();
+                Observer?.Dispose();
+                WindowObserver?.Dispose();
+                ModelLayer?.Dispose();
+            }
 
-        // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-        // TODO: set large fields to null
-        Disposed = true;
-      }
+            Disposed = true;
+        }
     }
 
     public void Dispose()
     {
-      if (Disposed)
-        throw new ObjectDisposedException(nameof(MainWindowViewModel));
-      Dispose(disposing: true);
-      GC.SuppressFinalize(this);
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
     #endregion IDisposable
